@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Play, Navigation, Loader2, AlertCircle, CheckCircle, MapPin } from 'lucide-react';
+import { Play, Navigation, Loader2, AlertCircle, CheckCircle, MapPin, RefreshCw, Layers } from 'lucide-react';
 
 class PriorityQueue {
   constructor() { this.values = []; }
@@ -67,10 +67,9 @@ export default function App() {
     const uniqueCities = Array.from(new Set(segments.flatMap(s => [s.from, s.to])));
     return uniqueCities.map((city, idx) => {
       const angle = (idx / uniqueCities.length) * 2 * Math.PI;
-      // Increased radius for better text spreading and layout breathing space
-      const radius = 220;
-      const centerX = 440;
-      const centerY = 300;
+      const radius = 230; 
+      const centerX = 460;
+      const centerY = 320;
       return { id: city, name: city, x: centerX + radius * Math.cos(angle), y: centerY + radius * Math.sin(angle) };
     });
   };
@@ -87,22 +86,23 @@ export default function App() {
     setTotalDistance(null);
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/fetch-route-matrix", {
+      // production live endpoint mapping directly via Hugging Face Cloud engine
+      const response = await fetch("https://aman-dev-ai33-ai-route-backend.hf.space/api/fetch-route-matrix", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ source: source.trim(), destination: destination.trim() })
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ detail: "Server response crashed." }));
-        throw new Error(errorData.detail || "Backend pipeline broken.");
+        const errorData = await response.json().catch(() => ({ detail: "Server cluster validation execution failed." }));
+        throw new Error(errorData.detail || "Backend production pipeline processing error.");
       }
       
       const data = await response.json();
       const segments = data.segments;
 
       if (!segments || segments.length === 0) {
-        throw new Error("AI ko is route ka mapping matrix nahi mila.");
+        throw new Error("AI Agent ko is specified layout matrix sequence ka route graph nahi mila.");
       }
 
       const computedNodes = generateNodePositions(segments);
@@ -134,7 +134,7 @@ export default function App() {
         setShortestPath(result.path);
         setTotalDistance(result.totalDistance);
       } else {
-        throw new Error("Graph computation validation failed.");
+        throw new Error("Topology alignment validation failed inside graph matrix engine.");
       }
 
     } catch (err) {
@@ -154,131 +154,158 @@ export default function App() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-slate-950 text-slate-100 font-sans overflow-hidden">
+    <div className="flex flex-col h-screen bg-slate-950 text-slate-100 font-sans overflow-hidden select-none">
       <style>{`
         @keyframes dash { to { stroke-dashoffset: -40; } }
         .animate-march { stroke-dasharray: 8, 4; animation: dash 1s linear infinite; }
+        .grid-mesh {
+          background-size: 40px 40px;
+          background-image: linear-gradient(to right, rgba(30, 41, 59, 0.5) 1px, transparent 1px),
+                            linear-gradient(to bottom, rgba(30, 41, 59, 0.5) 1px, transparent 1px);
+        }
       `}</style>
 
-      {/* Top Navbar */}
-      <header className="flex items-center justify-between px-6 py-4 bg-slate-900 border-b border-slate-800 shadow-2xl z-10">
+      {/* Modern High-Tech Header Section */}
+      <header className="flex items-center justify-between px-6 py-4 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 shadow-[0_4px_30px_rgba(0,0,0,0.5)] z-20">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-gradient-to-br from-indigo-600 to-purple-600 text-white rounded-xl shadow-lg">
-            <Navigation size={20} />
+          <div className="p-2.5 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 text-white rounded-xl shadow-[0_0_15px_rgba(79,70,229,0.4)]">
+            <Navigation size={22} className="animate-pulse" />
           </div>
           <div>
-            <h1 className="text-lg font-bold tracking-wider bg-gradient-to-r from-slate-100 to-slate-400 bg-clip-text text-transparent">AI AGENTIC ROUTE OPTIMIZER</h1>
-            <p className="text-[11px] text-indigo-400 font-mono tracking-tight">Tavily Engine + Mistral Large LLM + Custom Dijkstra Graph Solver</p>
+            <h1 className="text-sm font-extrabold tracking-widest bg-gradient-to-r from-slate-50 via-slate-200 to-slate-400 bg-clip-text text-transparent">
+              AI AGENTIC ROUTE OPTIMIZER
+            </h1>
+            <p className="text-[10px] text-indigo-400 font-mono tracking-tight uppercase">
+              Tavily Engine + Mistral Large LLM + Custom Dijkstra Graph Solver
+            </p>
           </div>
         </div>
-        <span className="text-xs bg-slate-950 px-3 py-1.5 rounded-full text-slate-400 border border-slate-800 font-mono">
-          Agent Status: <span className="text-emerald-400 font-bold animate-pulse">● Online</span>
-        </span>
+        <div className="flex items-center gap-4">
+          <span className="flex items-center gap-2 text-[10px] bg-slate-950/80 px-3 py-1.5 rounded-lg text-slate-400 border border-slate-800 font-mono">
+            Agent Pipelines: <span className="text-emerald-400 font-bold flex items-center gap-1">● Live Cloud</span>
+          </span>
+        </div>
       </header>
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden relative">
         
-        {/* Sidebar Controls Panel */}
-        <aside className="w-80 bg-slate-900 p-5 border-r border-slate-800 flex flex-col justify-between z-10 shadow-2xl">
+        {/* Left Side Control Tower Dashboard */}
+        <aside className="w-80 bg-slate-900/40 backdrop-blur-md p-5 border-r border-slate-800/80 flex flex-col justify-between z-10 shadow-[4px_0_24px_rgba(0,0,0,0.3)]">
           <div className="space-y-5">
-            <div className="p-3.5 bg-slate-950 rounded-xl border border-slate-800/60 text-[11px] text-slate-400 leading-relaxed">
-              🌍 <span className="text-slate-200 font-semibold">Dynamic Routing Framework:</span> Location targets inject karke optimized vector paths render karein.
+            <div className="p-3.5 bg-slate-950/80 rounded-xl border border-indigo-500/10 text-[11px] text-slate-400 leading-relaxed shadow-inner">
+              <span className="text-indigo-400 font-semibold block mb-0.5">🧠 Agentic Spatial Engine:</span>
+              Locations pass karte hi dynamic LLM parser matrix links create karega, aur UI par path evaluate hoga.
             </div>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1.5">📍 Source Terminal</label>
-                <input 
-                  type="text" 
-                  placeholder="e.g., Siwan(Bihar)" 
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2.5 text-xs text-slate-200 focus:border-indigo-500 transition outline-none shadow-inner"
-                  value={source}
-                  onChange={(e) => setSource(e.target.value)}
-                />
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">📍 Source Core</label>
+                <div className="relative">
+                  <input 
+                    type="text" 
+                    placeholder="e.g., Siwan, Bihar" 
+                    className="w-full bg-slate-950/90 border border-slate-800 focus:border-indigo-500 rounded-lg pl-3 pr-8 py-2.5 text-xs text-slate-200 transition outline-none shadow-inner"
+                    value={source}
+                    onChange={(e) => setSource(e.target.value)}
+                  />
+                  <div className="absolute right-2.5 top-3 text-[10px] text-slate-600 font-mono">SRC</div>
+                </div>
               </div>
 
               <div>
-                <label className="block text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1.5">🎯 Destination Terminal</label>
-                <input 
-                  type="text" 
-                  placeholder="e.g., Gopalganj(Bihar)" 
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2.5 text-xs text-slate-200 focus:border-indigo-500 transition outline-none shadow-inner"
-                  value={destination}
-                  onChange={(e) => setDestination(e.target.value)}
-                />
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">🎯 Destination Target</label>
+                <div className="relative">
+                  <input 
+                    type="text" 
+                    placeholder="e.g., Gopalganj, Bihar" 
+                    className="w-full bg-slate-950/90 border border-slate-800 focus:border-purple-500 rounded-lg pl-3 pr-8 py-2.5 text-xs text-slate-200 transition outline-none shadow-inner"
+                    value={destination}
+                    onChange={(e) => setDestination(e.target.value)}
+                  />
+                  <div className="absolute right-2.5 top-3 text-[10px] text-slate-600 font-mono">DEST</div>
+                </div>
               </div>
             </div>
 
             <button 
               onClick={handleAgenticRouting}
               disabled={loading}
-              className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 disabled:opacity-50 text-white font-bold py-3 px-4 rounded-xl text-xs flex items-center justify-center gap-2 transition shadow-lg shadow-indigo-600/20"
+              className="w-full bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:opacity-90 disabled:opacity-40 text-white font-bold py-3 px-4 rounded-xl text-xs flex items-center justify-center gap-2 transition-all duration-300 shadow-lg shadow-indigo-600/20 active:scale-95"
             >
               {loading ? (
                 <>
-                  <Loader2 size={14} className="animate-spin" /> Resolving Cluster Topology...
+                  <Loader2 size={13} className="animate-spin text-white" /> Resolving Cluster Topology...
                 </>
               ) : (
                 <>
-                  <Play size={14} /> Optimize Vector Path
+                  <Play size={13} fill="currentColor" /> Optimize Vector Path
                 </>
               )}
             </button>
 
+            {/* Elegant Error Diagnostics Monitor */}
             {error && (
-              <div className="p-3 bg-red-500/5 border border-red-500/20 rounded-xl flex items-start gap-2 text-red-400 text-[11px] font-mono leading-tight">
-                <AlertCircle size={14} className="mt-0.5 shrink-0" />
-                <div>
-                  <p className="font-bold uppercase tracking-wide text-[10px] text-red-500 mb-0.5">System Exception Catch:</p>
-                  <p>{error}</p>
+              <div className="p-3 bg-red-500/5 border border-red-500/20 rounded-xl flex items-start gap-2 text-red-400 text-[11px] font-mono leading-tight animate-fadeIn">
+                <AlertCircle size={14} className="mt-0.5 shrink-0 text-red-500" />
+                <div className="space-y-0.5">
+                  <p className="font-bold uppercase tracking-wider text-[9px] text-red-500">Pipeline Exception Catch:</p>
+                  <p className="text-slate-300 text-[10px]">{error}</p>
                 </div>
               </div>
             )}
 
+            {/* High-Fidelity Convergence Output Window */}
             {totalDistance !== null && totalDistance !== Infinity && (
-              <div className="p-4 bg-emerald-500/5 border border-emerald-500/20 rounded-xl space-y-2 animate-fadeIn">
-                <div className="flex items-center gap-2 text-emerald-400 font-bold text-xs">
-                  <CheckCircle size={14} /><span>CONVERGED VIA DIJKSTRA</span>
+              <div className="p-4 bg-emerald-500/5 border border-emerald-500/20 rounded-xl space-y-3 animate-fadeIn shadow-md">
+                <div className="flex items-center gap-1.5 text-emerald-400 font-extrabold text-[10px] tracking-wider uppercase">
+                  <CheckCircle size={13} /><span>CONVERGED VIA DIJKSTRA</span>
                 </div>
-                <div className="text-[11px] font-mono text-slate-400 space-y-1">
-                  <p>Resolved Shortest Matrix Sequence:</p>
-                  <p className="text-emerald-400 font-bold bg-slate-950 p-2.5 rounded-lg border border-slate-800 text-[11px] tracking-wide break-words leading-relaxed">
+                <div className="text-[11px] font-mono text-slate-400 space-y-2">
+                  <p className="text-[10px] text-slate-500">Resolved Path Matrix:</p>
+                  <div className="text-emerald-400 font-bold bg-slate-950 p-2.5 rounded-lg border border-slate-800/80 text-[10px] tracking-wide break-words leading-relaxed max-h-24 overflow-y-auto">
                     {shortestPath.join(' ➔ ')}
-                  </p>
-                  <p className="pt-2 text-slate-300 font-semibold">Net System Weight: <span className="text-emerald-400 font-extrabold text-sm">{totalDistance} KM</span></p>
+                  </div>
+                  <div className="pt-1 flex items-center justify-between border-t border-slate-800/60 mt-2">
+                    <span className="text-slate-400 text-[10px]">Net Vector Weight:</span>
+                    <span className="text-emerald-400 font-black text-sm">{totalDistance} KM</span>
+                  </div>
                 </div>
               </div>
             )}
           </div>
 
-          <div className="text-[10px] text-center font-mono text-slate-600 border-t border-slate-800 pt-3">
-            Portfolio Agent Engine Alpha v6
+          <div className="text-[9px] text-center font-mono text-slate-600 border-t border-slate-800/80 pt-3 flex items-center justify-center gap-1.5">
+            <Layers size={10} /> Live Workspace Dashboard v1.0
           </div>
         </aside>
 
-        {/* Live Vector Spatial Canvas Area */}
-        <main className="flex-1 bg-slate-950 relative overflow-hidden">
-          <div className="absolute inset-0 bg-[linear-gradient(to_right,#0f172a_1.5px,transparent_1.5px),linear-gradient(to_bottom,#0f172a_1.5px,transparent_1.5px)] bg-[size:3rem_3rem] opacity-60 pointer-events-none"></div>
+        {/* Dynamic Vector Spatial Simulation Workspace Canvas Layer */}
+        <main className="flex-1 bg-slate-950 relative overflow-hidden grid-mesh">
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-slate-950/20 to-slate-950 pointer-events-none"></div>
 
           {nodes.length === 0 && !loading && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center text-center space-y-2 pointer-events-none p-6">
-              <MapPin className="text-indigo-500/30 animate-pulse" size={28} />
-              <h3 className="text-xs font-semibold text-slate-500 tracking-wider uppercase">Spatial Simulation Canvas Idle</h3>
-              <p className="text-[11px] text-slate-600 max-w-xs">Inputs enter karke topology load karein bahi.</p>
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-center space-y-3 pointer-events-none p-6 z-10 animate-fadeIn">
+              <div className="p-4 bg-slate-900/50 rounded-2xl border border-slate-800/50 shadow-2xl">
+                <MapPin className="text-indigo-500/40 animate-bounce mx-auto mb-2" size={32} />
+                <h3 className="text-xs font-bold text-slate-400 tracking-widest uppercase mb-1">Spatial Canvas Blueprint Idle</h3>
+                <p className="text-[10px] text-slate-500 max-w-xs mx-auto">
+                  Source aur target fields load karke real-time vectors plot karein bhai.
+                </p>
+              </div>
             </div>
           )}
 
           {loading && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950/80 backdrop-blur-sm z-40 space-y-3">
-              <Loader2 size={28} className="text-indigo-500 animate-spin" />
-              <div className="text-center font-mono text-xs text-slate-400 space-y-1">
-                <p className="text-indigo-400 font-bold animate-pulse">🛠️ SYSTEM PIPELINE RUNNING</p>
-                <p className="text-[10px] text-slate-600">Scraping and mapping layout graphs inside viewports...</p>
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950/70 backdrop-blur-sm z-30 space-y-3">
+              <div className="p-5 bg-slate-900/80 border border-slate-800 rounded-2xl flex flex-col items-center shadow-2xl max-w-xs">
+                <RefreshCw size={24} className="text-indigo-400 animate-spin mb-3" />
+                <p className="text-indigo-400 font-bold tracking-wider font-mono text-[11px] uppercase animate-pulse">🛠️ PIPELINE PROCESSING</p>
+                <p className="text-[10px] text-slate-500 text-center mt-1 font-mono">LLM model targets link calculations matrix calculate kar raha hai...</p>
               </div>
             </div>
           )}
 
-          {/* Lines & Weight Tags SVG Layer */}
+          {/* Lines & Weight Tags SVG Engineering Layer */}
           <svg className="absolute inset-0 w-full h-full pointer-events-none z-0">
             {edges.map((edge, idx) => {
               const isHighlighted = isEdgeInShortestPath(edge);
@@ -286,15 +313,49 @@ export default function App() {
               const midY = (edge.fromY + edge.toY) / 2;
 
               return (
-                <g key={idx}>
-                  <line x1={edge.fromX} y1={edge.fromY} x2={edge.toX} y2={edge.toY} stroke={isHighlighted ? "#10b981" : "#1e293b"} strokeWidth={isHighlighted ? "5" : "2"} />
-                  {isHighlighted && <line x1={edge.fromX} y1={edge.fromY} x2={edge.toX} y2={edge.toY} stroke="#34d399" strokeWidth="5" className="animate-march" />}
+                <g key={idx} className="transition-all duration-500">
+                  <line 
+                    x1={edge.fromX} 
+                    y1={edge.fromY} 
+                    x2={edge.toX} 
+                    y2={edge.toY} 
+                    stroke={isHighlighted ? "#10b981" : "#1e293b"} 
+                    strokeWidth={isHighlighted ? "4" : "1.5"} 
+                    opacity={isHighlighted ? "1" : "0.4"}
+                  />
+                  {isHighlighted && (
+                    <line 
+                      x1={edge.fromX} 
+                      y1={edge.fromY} 
+                      x2={edge.toX} 
+                      y2={edge.toY} 
+                      stroke="#34d399" 
+                      strokeWidth="4" 
+                      className="animate-march" 
+                    />
+                  )}
                   
-                  {/* Highly Readable Distance Container Badge */}
-                  <g transform={`translate(${midX - 25}, ${midY - 11})`}>
-                    <rect width="50" height="22" rx="6" fill="#020617" stroke={isHighlighted ? "#10b981" : "#475569"} strokeWidth={isHighlighted ? "1.5" : "1"} shadow="lg" />
-                    <text x="25" y="14" fill={isHighlighted ? "#34d399" : "#94a3b8"} fontSize="10" fontFamily="monospace" fontWeight="bold" textAnchor="middle">
-                      {edge.weight} KM
+                  {/* Distance Nodes Container Badges */}
+                  <g transform={`translate(${midX - 25}, ${midY - 10})`}>
+                    <rect 
+                      width="50" 
+                      height="20" 
+                      rx="5" 
+                      fill="#020617" 
+                      stroke={isHighlighted ? "#10b981" : "#334155"} 
+                      strokeWidth={isHighlighted ? "1.5" : "1"} 
+                      opacity={isHighlighted ? "1" : "0.7"}
+                    />
+                    <text 
+                      x="25" 
+                      y="13" 
+                      fill={isHighlighted ? "#34d399" : "#64748b"} 
+                      fontSize="9" 
+                      fontFamily="monospace" 
+                      fontWeight="bold" 
+                      textAnchor="middle"
+                    >
+                      {edge.weight}K
                     </text>
                   </g>
                 </g>
@@ -302,29 +363,35 @@ export default function App() {
             })}
           </svg>
 
-          {/* Connected Hub Nodes */}
+          {/* Connected Hub Spatial Graph Nodes Layer */}
           {nodes.map((node) => {
             const isPartOfPath = shortestPath.includes(node.id);
             const isSrcNode = node.id.toLowerCase().includes(source.trim().toLowerCase()) || source.trim().toLowerCase().includes(node.id.toLowerCase());
             const isDestNode = node.id.toLowerCase().includes(destination.trim().toLowerCase()) || destination.trim().toLowerCase().includes(node.id.toLowerCase());
 
             return (
-              <div key={node.id} className="absolute transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center z-10 text-center" style={{ left: node.x, top: node.y }}>
+              <div 
+                key={node.id} 
+                className="absolute transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center z-10 text-center transition-all duration-500" 
+                style={{ left: node.x, top: node.y }}
+              >
                 {/* Node Core Pointer */}
-                <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs font-mono border transition-all duration-500 shadow-2xl ${
-                  isSrcNode ? 'bg-indigo-600 text-white border-indigo-400 ring-4 ring-indigo-500/30 scale-110' :
-                  isDestNode ? 'bg-purple-600 text-white border-purple-400 ring-4 ring-purple-500/30 scale-110' :
-                  isPartOfPath ? 'bg-emerald-500 text-slate-950 border-emerald-300 font-extrabold scale-105' : 'bg-slate-900 border-slate-700 text-slate-300'
+                <div className={`w-7 h-7 rounded-xl flex items-center justify-center text-xs font-mono border transition-all duration-500 shadow-2xl ${
+                  isSrcNode ? 'bg-indigo-600 text-white border-indigo-400 ring-4 ring-indigo-500/20 scale-110 font-black' :
+                  isDestNode ? 'bg-purple-600 text-white border-purple-400 ring-4 ring-purple-500/20 scale-110 font-black' :
+                  isPartOfPath ? 'bg-emerald-500 text-slate-950 border-emerald-200 font-black scale-105 shadow-[0_0_15px_rgba(16,185,129,0.4)]' : 
+                  'bg-slate-900 border-slate-800 text-slate-400 opacity-80'
                 }`}>
-                  📍
+                  {isSrcNode ? 'S' : isDestNode ? 'D' : '•'}
                 </div>
                 
-                {/* UPGRADED CLEAR BOLD TEXT LABEL */}
-                <div className="mt-2 relative">
-                  <span className={`block font-mono text-[11px] font-bold px-2.5 py-1 rounded-md shadow-xl border whitespace-nowrap tracking-wide ${
-                    isSrcNode ? 'bg-indigo-950 text-indigo-300 border-indigo-800' :
-                    isDestNode ? 'bg-purple-950 text-purple-300 border-purple-800' :
-                    isPartOfPath ? 'bg-slate-900 text-emerald-400 border-emerald-600' : 'bg-slate-900/95 text-slate-200 border-slate-700'
+                {/* Custom Bold Typography Matrix Label */}
+                <div className="mt-1.5 relative">
+                  <span className={`block font-mono text-[10px] font-bold px-2 py-0.5 rounded-md border whitespace-nowrap tracking-wide shadow-2xl transition-all duration-300 ${
+                    isSrcNode ? 'bg-indigo-950/95 text-indigo-300 border-indigo-700/80' :
+                    isDestNode ? 'bg-purple-950/95 text-purple-300 border-purple-700/80' :
+                    isPartOfPath ? 'bg-slate-900/95 text-emerald-400 border-emerald-600/80' : 
+                    'bg-slate-900/90 text-slate-300 border-slate-800/80 opacity-70'
                   }`}>
                     {node.name}
                   </span>
