@@ -89,16 +89,19 @@ export default function App() {
     setTotalDistance(null);
 
     try {
-      // App.jsx me line number 62-63 ke paas yeh live link hai:
-const response = await fetch("https://aman-dev-ai33-ai-route-backend.hf.space/api/fetch-route-matrix", {
+      // Hugging Face embedding direct stream access fallback link
+      const response = await fetch("https://aman-dev-ai33-ai-route-backend.hf.space/api/fetch-route-matrix", {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
         body: JSON.stringify({ source: source.trim(), destination: destination.trim() }),
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ detail: 'Server cluster validation execution failed.' }));
-        throw new Error(errorData.detail || 'Backend production pipeline processing error.');
+        const errorData = await response.json().catch(() => ({ detail: 'Live cloud backend deployment pipeline issue.' }));
+        throw new Error(errorData.detail || 'Backend production processing matrix execution failed.');
       }
 
       const data = await response.json();
@@ -140,7 +143,7 @@ const response = await fetch("https://aman-dev-ai33-ai-route-backend.hf.space/ap
         throw new Error('Topology alignment validation failed inside graph matrix engine.');
       }
     } catch (err) {
-      setError(err.message);
+      setError(err.message || 'Network flow execution failed.');
     } finally {
       setLoading(false);
     }
