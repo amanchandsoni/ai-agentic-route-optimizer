@@ -89,19 +89,15 @@ export default function App() {
     setTotalDistance(null);
 
     try {
-      // Hugging Face embedding direct stream access fallback link
-      const response = await fetch("https://aman-dev-ai33-ai-route-backend.hf.space/api/fetch-route-matrix", {
+      const response = await fetch('https://aman-dev-ai33-ai-route-backend.hf.space/api/fetch-route-matrix', {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ source: source.trim(), destination: destination.trim() }),
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ detail: 'Live cloud backend deployment pipeline issue.' }));
-        throw new Error(errorData.detail || 'Backend production processing matrix execution failed.');
+        const errorData = await response.json().catch(() => ({ detail: 'Server cluster validation execution failed.' }));
+        throw new Error(errorData.detail || 'Backend production pipeline processing error.');
       }
 
       const data = await response.json();
@@ -143,7 +139,7 @@ export default function App() {
         throw new Error('Topology alignment validation failed inside graph matrix engine.');
       }
     } catch (err) {
-      setError(err.message || 'Network flow execution failed.');
+      setError(err.message);
     } finally {
       setLoading(false);
     }
