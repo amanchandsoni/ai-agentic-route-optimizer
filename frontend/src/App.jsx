@@ -89,7 +89,8 @@ export default function App() {
     setTotalDistance(null);
 
     try {
-      const response = await fetch('https://ai-agentic-route-optimizer-4.onrender.com](https://ai-agentic-route-optimizer-4.onrender.com', {
+       // ​​✔️ Ekdam sahi tareeka
+const response = await fetch('https://ai-agentic-route-optimizer-4.onrender.com/api/fetch-route-matrix', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ source: source.trim(), destination: destination.trim() }),
